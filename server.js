@@ -36,22 +36,7 @@ io.on("connection", (socket) => {
             }
         }
     })
-    function checker(id) {
-        for (let i = 0; i < StartMatchUser.length; i++) {
-            if (StartMatchUser[i] !== id) {
-                const player1 = id;
-                const player2 = StartMatchUser[i];
-                PlayingUser.push({ player1, player2 });
-                console.log(connectedClients[StartMatchUser[i]]);
 
-                io.to(connectedClients[player1]).emit('matchfound', { player1, player2 });
-                io.to(connectedClients[player2]).emit('matchfound', { player1, player2 });
-
-                // Remove players from StartMatchUser array
-                StartMatchUser = StartMatchUser.filter(userId => userId !== player1 && userId !== player2);
-            }
-        }
-    }
     socket.on("PlayingUser", (id) => {
         if (StartMatchUser.includes(id)) {
             if (!PlayingUser.includes(id)) {
@@ -61,4 +46,79 @@ io.on("connection", (socket) => {
             }
         }
     })
+
+    socket.on("callResult", (data) => {
+        ResultCalculator(data)
+    })
 })
+
+
+
+
+function checker(id) {
+    for (let i = 0; i < StartMatchUser.length; i++) {
+        if (StartMatchUser[i] !== id) {
+            const player1 = id;
+            const player2 = StartMatchUser[i];
+            PlayingUser.push({ player1, player2 });
+            console.log(connectedClients[StartMatchUser[i]]);
+
+            io.to(connectedClients[player1]).emit('matchfound', { player1, player2 });
+            io.to(connectedClients[player2]).emit('matchfound', { player1, player2 });
+
+            // Remove players from StartMatchUser array
+            StartMatchUser = StartMatchUser.filter(userId => userId !== player1 && userId !== player2);
+        }
+    }
+}
+function ResultCalculator(data) {
+    let playerPoint1 = 0;
+    let playerPoint2 = 0;
+    const player1 = data.player1;
+    const player2 = data.player2;
+    if (player1.char > player2.char) {
+        playerPoint1++;
+    }
+    else if (player2.char > player1.char) {
+        playerPoint2++;
+
+    }
+    else {
+
+    }
+    if (player1.word > player2.word) {
+        playerPoint1++;
+    }
+    else if (player2.word > player1.word) {
+        playerPoint2++;
+
+    }
+    else {
+
+    }
+    if (player1.acc > player2.acc) {
+        playerPoint1++;
+    }
+    else if (player2.acc > player1.acc) {
+        playerPoint2++;
+
+    }
+    else {
+
+    }
+    if (playerPoint1 > playerPoint2) {
+        io.to(connectedClients[player1.id]).emit('result', "player1 win");
+        io.to(connectedClients[player2.id]).emit('result', "player1 win");
+
+    }
+    else if (playerPoint2 > playerPoint1) {
+        io.to(connectedClients[player1.id]).emit('result', "player2 win");
+        io.to(connectedClients[player2.id]).emit('result', "player2 win");
+
+    }
+    else {
+        io.to(connectedClients[player1.id]).emit('result', "draw");
+        io.to(connectedClients[player2.id]).emit('result', "draw");
+
+    }
+}
